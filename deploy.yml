@@ -4,14 +4,36 @@
   hosts: all
 
   tasks:
+  - name: copy env file to host
+    copy:
+      src: "{{ local_project_path}}/.env.prod"
+      dest: "{{ project_path }}/.env"
+
   - name: pull latest from git
     ansible.builtin.git:
       repo: 'https://github.com/jzengg/peachorobo.git'
-      dest: "{{ home_path }}"
-      update: no
-      version: master
+      dest: "{{ project_path }}"
+      update: yes
+      version: main
+
   - name: install requirements using pip
     pip:
-      requirements: "{{ home_path }}/requirements.txt"
-      virtualenv: "{{ home_path }}/venv"
+      requirements: "{{ project_path }}/requirements.txt"
+      virtualenv: "{{ project_path }}/venv"
+      virtualenv_command: /usr/bin/python3 -m venv
       state: present
+
+  - name: copy service file to systemd
+    become: yes
+    copy:
+      src: "{{ local_project_path }}/peachorobo_bot.service"
+      dest: /etc/systemd/system/peachorobo_bot.service
+
+  - name: restart bot service
+    become: yes
+    systemd:
+      name: peachorobo_bot.service
+      state: restarted
+      enabled: yes
+      daemon_reload: yes
+
