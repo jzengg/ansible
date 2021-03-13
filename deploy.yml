@@ -1,0 +1,17 @@
+---
+# Playbook to deploy new code to ec2
+- name: Deploy peachorobo
+  hosts: all
+
+  tasks:
+  - name: pull latest from git
+    ansible.builtin.git:
+      repo: 'https://github.com/jzengg/peachorobo.git'
+      dest: "{{ home_path }}"
+      update: no
+      version: master
+  - name: install requirements using pip
+    pip:
+      requirements: "{{ home_path }}/requirements.txt"
+      virtualenv: "{{ home_path }}/venv"
+      state: present
